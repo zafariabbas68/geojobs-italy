@@ -7,6 +7,7 @@ export const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 10000,
 });
 
 // Add token to requests
@@ -21,8 +22,24 @@ api.interceptors.request.use((config) => {
 // Job Services
 export const jobService = {
   getJobs: async (params?: any) => {
-    const response = await api.get('/jobs', { params });
-    return response.data;
+    try {
+      console.log('Fetching jobs from:', API_URL);
+      const response = await api.get('/jobs', { params });
+      console.log('API Response:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        return response.data;
+      } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
+        return response.data.data;
+      } else if (response.data && response.data.items && Array.isArray(response.data.items)) {
+        return response.data.items;
+      } else {
+        return [];
+      }
+    } catch (error: any) {
+      console.error('Error fetching jobs:', error);
+      return [];
+    }
   },
   getJob: async (id: string) => {
     const response = await api.get(`/jobs/${id}`);
@@ -32,13 +49,68 @@ export const jobService = {
     const response = await api.post('/jobs', data);
     return response.data;
   },
-  updateJob: async (id: string, data: any) => {
-    const response = await api.put(`/jobs/${id}`, data);
-    return response.data;
+};
+
+// Auth Services
+export const authService = {
+  login: async (email: string, password: string) => {
+    try {
+      const formData = new FormData();
+      formData.append('username', email);
+      formData.append('password', password);
+      
+      const response = await api.post('/auth/login', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      });
+      
+      if (response.data.access_token) {
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('user', JSON.stringify(response.data.user || {}));
+      }
+      return response.data;
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    }
   },
-  deleteJob: async (id: string) => {
-    const response = await api.delete(`/jobs/${id}`);
-    return response.data;
+  register: async (data: any) => {
+    try {
+      // Make sure all required fields are present
+      const payload = {
+        email: data.email,
+        password: data.password,
+        first_name: data.first_name || data.firstName || '',
+        last_name: data.last_name || data.lastName || '',
+        role: data.role || 'candidate'
+      };
+      
+      console.log('Register payload:', payload);
+      const response = await api.post('/auth/register', payload);
+      console.log('Register response:', response.data);
+      return response.data;
+    } catch (error: any) {
+      console.error('Register error:', error);
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
+      throw error;
+    }
+  },
+  logout: () => {
+    localStorage.removeItem('access_token');
+    localStorage.removeItem('user');
+    window.location.href = '/';
+  },
+  getCurrentUser: async () => {
+    const token = localStorage.getItem('access_token');
+    if (!token) return null;
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch {
+      return null;
+    }
   },
 };
 
@@ -48,70 +120,12 @@ export const candidateService = {
     const response = await api.get('/candidates', { params });
     return response.data;
   },
-  getCandidate: async (id: string) => {
-    const response = await api.get(`/candidates/${id}`);
-    return response.data;
-  },
-  updateCandidate: async (id: string, data: any) => {
-    const response = await api.put(`/candidates/${id}`, data);
-    return response.data;
-  },
-};
-
-// Auth Services
-export const authService = {
-  login: async (email: string, password: string) => {
-    const response = await api.post('/auth/login', { username: email, password });
-    if (response.data.access_token) {
-      localStorage.setItem('access_token', response.data.access_token);
-    }
-    return response.data;
-  },
-  register: async (data: any) => {
-    const response = await api.post('/auth/register', data);
-    return response.data;
-  },
-  logout: () => {
-    localStorage.removeItem('access_token');
-  },
-  getCurrentUser: async () => {
-    const response = await api.get('/auth/me');
-    return response.data;
-  },
 };
 
 // Company Services
 export const companyService = {
   getCompanies: async () => {
     const response = await api.get('/companies');
-    return response.data;
-  },
-  getCompany: async (id: string) => {
-    const response = await api.get(`/companies/${id}`);
-    return response.data;
-  },
-  createCompany: async (data: any) => {
-    const response = await api.post('/companies', data);
-    return response.data;
-  },
-  updateCompany: async (id: string, data: any) => {
-    const response = await api.put(`/companies/${id}`, data);
-    return response.data;
-  },
-};
-
-// Search Service
-export const searchService = {
-  search: async (query: string, type?: string) => {
-    const response = await api.get('/search', { params: { q: query, type } });
-    return response.data;
-  },
-};
-
-// Analytics Service
-export const analyticsService = {
-  getAnalytics: async () => {
-    const response = await api.get('/analytics');
     return response.data;
   },
 };

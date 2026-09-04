@@ -7,9 +7,14 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from app.core.database import get_db
-from app.core.security import create_access_token, verify_password, get_password_hash
+from app.core.security import (
+    create_access_token,
+    verify_password,
+    get_password_hash,
+    get_current_user
+)
 from app.models.user import User, UserRole
-from app.schemas.user import UserCreate, UserResponse, Token, LoginRequest
+from app.schemas.user import UserCreate, UserResponse, Token
 
 router = APIRouter()
 
@@ -58,7 +63,7 @@ async def login(
         )
     
     access_token = create_access_token(
-        data={"sub": str(user.id), "role": user.role}
+        data={"sub": str(user.id), "role": user.role.value}
     )
     
     return Token(
@@ -67,16 +72,14 @@ async def login(
         user=user
     )
 
+@router.get("/me", response_model=UserResponse)
+async def get_current_user_info(
+    current_user: User = Depends(get_current_user)
+):
+    """Get current user info"""
+    return current_user
+
 @router.post("/logout")
 async def logout():
     """Logout user"""
     return {"message": "Successfully logged out"}
-
-@router.post("/refresh")
-async def refresh_token(
-    refresh_token: str,
-    db: Session = Depends(get_db)
-):
-    """Refresh access token"""
-    # Implement refresh token logic
-    pass

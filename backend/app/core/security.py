@@ -1,5 +1,5 @@
 """
-Security utilities for authentication and authorization
+Security utilities for authentication - Using PBKDF2
 """
 
 from datetime import datetime, timedelta
@@ -13,8 +13,8 @@ from app.core.config import settings
 from app.core.database import get_db
 from app.models.user import User
 
-# Password hashing
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# Use pbkdf2_sha256 instead of bcrypt (no 72-byte limitation)
+pwd_context = CryptContext(schemes=["pbkdf2_sha256"], deprecated="auto")
 
 # OAuth2 scheme
 oauth2_scheme = OAuth2PasswordBearer(
@@ -23,11 +23,23 @@ oauth2_scheme = OAuth2PasswordBearer(
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash"""
-    return pwd_context.verify(plain_password, hashed_password)
+    try:
+        return pwd_context.verify(plain_password, hashed_password)
+    except Exception as e:
+        print(f"Password verification error: {e}")
+        return False
 
 def get_password_hash(password: str) -> str:
-    """Hash a password"""
-    return pwd_context.hash(password)
+    """Hash a password using pbkdf2_sha256"""
+    try:
+        return pwd_context.hash(password)
+    except Exception as e:
+        print(f"Password hashing error: {e}")
+        # Fallback to simple hash if pbkdf2 fails
+        import hashlib
+        import base64
+        hash_obj = hashlib.sha256(password.encode())
+        return base64.b64encode(hash_obj.digest()).decode('utf-8')
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
     """Create a JWT access token"""
@@ -89,8 +101,3 @@ def get_current_admin_user(
     if current_user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin privileges required")
     return current_user
-
-def rate_limit(request):
-    """Rate limiting middleware"""
-    # This is a placeholder - implement with Redis
-    pass

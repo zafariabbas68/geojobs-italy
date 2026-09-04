@@ -60,7 +60,6 @@ class Candidate(Base):
     
     # Relationships
     user = relationship("User", back_populates="candidate_profile")
-    skills = relationship("CandidateSkill", back_populates="candidate")
     applications = relationship("Application", back_populates="candidate")
     saved_jobs = relationship("SavedJob", back_populates="candidate")
 
@@ -68,7 +67,7 @@ class Company(Base):
     __tablename__ = "companies"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), unique=True, nullable=True)
     name = Column(String(255), nullable=False)
     description = Column(Text)
     website = Column(String(255))

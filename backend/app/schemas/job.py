@@ -6,82 +6,80 @@ from pydantic import BaseModel, Field, validator
 from typing import Optional, List
 from datetime import datetime
 import uuid
-from enum import Enum
-
-class JobType(str, Enum):
-    FULL_TIME = "full_time"
-    PART_TIME = "part_time"
-    CONTRACT = "contract"
-    INTERNSHIP = "internship"
-    FREELANCE = "freelance"
-
-class ExperienceLevel(str, Enum):
-    ENTRY = "entry"
-    MID = "mid"
-    SENIOR = "senior"
-    LEAD = "lead"
-    EXECUTIVE = "executive"
 
 class JobBase(BaseModel):
     title: str = Field(..., min_length=3, max_length=255)
     description: str = Field(..., min_length=20)
     requirements: Optional[str] = None
-    location: Optional[str] = None
-    address: Optional[str] = None
     city: Optional[str] = None
     province: Optional[str] = None
     country: str = "Italy"
     is_remote: bool = False
-    job_type: JobType = JobType.FULL_TIME
-    experience_level: ExperienceLevel = ExperienceLevel.MID
+    job_type: str = "FULL_TIME"
+    experience_level: str = "MID"
     salary_min: Optional[int] = Field(None, ge=0)
     salary_max: Optional[int] = Field(None, ge=0)
     salary_currency: str = "EUR"
     skills: List[str] = []
-    application_deadline: Optional[datetime] = None
+    category: Optional[str] = None
+    subcategory: Optional[str] = None
 
 class JobCreate(JobBase):
-    pass
+    @validator('job_type')
+    def validate_job_type(cls, v):
+        valid_types = ['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP', 'FREELANCE']
+        v_upper = v.upper()
+        if v_upper not in valid_types:
+            mapping = {
+                'FULL TIME': 'FULL_TIME',
+                'PART TIME': 'PART_TIME',
+                'FULLTIME': 'FULL_TIME',
+                'PARTTIME': 'PART_TIME',
+            }
+            if v_upper in mapping:
+                return mapping[v_upper]
+            return 'FULL_TIME'
+        return v_upper
+    
+    @validator('experience_level')
+    def validate_experience_level(cls, v):
+        valid_levels = ['ENTRY', 'MID', 'SENIOR', 'LEAD', 'EXECUTIVE']
+        v_upper = v.upper()
+        if v_upper not in valid_levels:
+            mapping = {
+                'JUNIOR': 'ENTRY',
+                'INTERMEDIATE': 'MID',
+                'SENIOR': 'SENIOR',
+            }
+            if v_upper in mapping:
+                return mapping[v_upper]
+            return 'MID'
+        return v_upper
 
-class JobUpdate(BaseModel):
-    title: Optional[str] = Field(None, min_length=3, max_length=255)
-    description: Optional[str] = Field(None, min_length=20)
-    requirements: Optional[str] = None
-    location: Optional[str] = None
-    address: Optional[str] = None
-    city: Optional[str] = None
-    province: Optional[str] = None
-    is_remote: Optional[bool] = None
-    job_type: Optional[JobType] = None
-    experience_level: Optional[ExperienceLevel] = None
-    salary_min: Optional[int] = Field(None, ge=0)
-    salary_max: Optional[int] = Field(None, ge=0)
-    skills: Optional[List[str]] = None
-    application_deadline: Optional[datetime] = None
-    status: Optional[str] = None
-
-class JobResponse(JobBase):
+class JobResponse(BaseModel):
     id: uuid.UUID
     company_id: uuid.UUID
-    company_name: Optional[str] = None
+    title: str
+    description: str
+    requirements: Optional[str] = None
+    city: Optional[str] = None
+    province: Optional[str] = None
+    country: str
+    is_remote: bool
+    job_type: str
+    experience_level: str
+    salary_min: Optional[int] = None
+    salary_max: Optional[int] = None
+    salary_currency: str
+    skills: List[str]
+    category: Optional[str] = None
+    subcategory: Optional[str] = None
     status: str
     views_count: int
     applications_count: int
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
+    company_name: Optional[str] = None
     
     class Config:
         from_attributes = True
-
-class JobSearchParams(BaseModel):
-    query: Optional[str] = None
-    job_type: Optional[JobType] = None
-    experience_level: Optional[ExperienceLevel] = None
-    city: Optional[str] = None
-    province: Optional[str] = None
-    skills: Optional[List[str]] = None
-    salary_min: Optional[int] = None
-    salary_max: Optional[int] = None
-    is_remote: Optional[bool] = None
-    page: int = 1
-    page_size: int = 20
