@@ -1,24 +1,47 @@
-# Environment variables (contains API token)
+# Dependencies
+node_modules/
+.pnp/
+.pnp.js
+
+# Build outputs
+build/
+dist/
+out/
+.next/
+
+# Environment files
 .env
-google_*.json
-google_token.json
-google_spreadsheet_id.txt
-
-# Generated files
-*.xlsx
-*.xls
-*.pyc
-__pycache__/
-
-# Virtual environment
-.venv/
-venv/
-env/
+.env.local
+.env.production.local
+.env.development.local
 
 # IDE files
 .idea/
 .vscode/
 *.swp
+*.swo
 
 # OS files
 .DS_Store
+Thumbs.db
+
+# Docker
+docker-compose.override.yml
+*.pid
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Testing
+coverage/
+.pytest_cache/
