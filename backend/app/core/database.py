@@ -5,16 +5,19 @@ Database configuration and session management
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
-from app.core.config import settings
+import os
 import time
+
+# Get database URL from environment
+DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/geojobs")
 
 # Create engine with PostGIS support
 engine = create_engine(
-    settings.DATABASE_URL,
+    DATABASE_URL,
     pool_pre_ping=True,
     pool_size=10,
     max_overflow=20,
-    echo=settings.DEBUG
+    echo=False
 )
 
 # Session factory
