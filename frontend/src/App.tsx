@@ -13,6 +13,8 @@ import { JobDetailPage } from './pages/JobDetailPage';
 import { CandidateProfilePage } from './pages/CandidateProfilePage';
 import { CompanyPage } from './pages/CompanyPage';
 import { DashboardPage } from './pages/DashboardPage';
+import { ApplyPage } from './pages/ApplyPage';
+import { ApplicationsPage } from './pages/ApplicationsPage';
 import './index.css';
 
 function App() {
@@ -24,11 +26,13 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="jobs" element={<JobsPage />} />
             <Route path="jobs/:id" element={<JobDetailPage />} />
+            <Route path="jobs/:jobId/apply" element={<ApplyPage />} />
             <Route path="candidates" element={<CandidatesPage />} />
             <Route path="candidates/:id" element={<CandidateProfilePage />} />
             <Route path="post-job" element={<PostJobPage />} />
             <Route path="company/:id" element={<CompanyPage />} />
             <Route path="dashboard" element={<DashboardPage />} />
+            <Route path="applications" element={<ApplicationsPage />} />
             <Route path="login" element={<LoginPage />} />
             <Route path="register" element={<RegisterPage />} />
             <Route path="*" element={<Navigate to="/" />} />
