@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000/api/v1';
+// In production, use relative path for Vercel
+const API_URL = process.env.REACT_APP_API_URL || '/api/v1';
+
+console.log('API URL:', API_URL);
 
 export const api = axios.create({
   baseURL: API_URL,
@@ -31,8 +34,6 @@ export const jobService = {
         return response.data;
       } else if (response.data && response.data.data && Array.isArray(response.data.data)) {
         return response.data.data;
-      } else if (response.data && response.data.items && Array.isArray(response.data.items)) {
-        return response.data.items;
       } else {
         return [];
       }
@@ -75,7 +76,6 @@ export const authService = {
   },
   register: async (data: any) => {
     try {
-      // Make sure all required fields are present
       const payload = {
         email: data.email,
         password: data.password,
@@ -86,14 +86,9 @@ export const authService = {
       
       console.log('Register payload:', payload);
       const response = await api.post('/auth/register', payload);
-      console.log('Register response:', response.data);
       return response.data;
     } catch (error: any) {
       console.error('Register error:', error);
-      if (error.response) {
-        console.error('Response data:', error.response.data);
-        console.error('Response status:', error.response.status);
-      }
       throw error;
     }
   },
@@ -102,19 +97,8 @@ export const authService = {
     localStorage.removeItem('user');
     window.location.href = '/';
   },
-  getCurrentUser: async () => {
-    const token = localStorage.getItem('access_token');
-    if (!token) return null;
-    try {
-      const response = await api.get('/auth/me');
-      return response.data;
-    } catch {
-      return null;
-    }
-  },
 };
 
-// Candidate Services
 export const candidateService = {
   getCandidates: async (params?: any) => {
     const response = await api.get('/candidates', { params });
@@ -122,7 +106,6 @@ export const candidateService = {
   },
 };
 
-// Company Services
 export const companyService = {
   getCompanies: async () => {
     const response = await api.get('/companies');
